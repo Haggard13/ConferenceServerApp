@@ -2,28 +2,34 @@ package com.example.conference.Controllers;
 
 
 import com.example.conference.JsonEntity.Dialogue;
-import com.example.conference.JsonEntity.Input.ConferenceMessage;
 import com.example.conference.JsonEntity.Input.DialogueIDList;
 import com.example.conference.JsonEntity.Input.DialogueMessage;
-import com.example.conference.db.CMessageTable;
 import com.example.conference.db.DMessageTable;
 import com.example.conference.db.DialogueTable;
 import com.google.gson.Gson;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("/dialogue")
 public class DialogueMessageController {
+    Logger logger = Logger.getLogger("dialogue_controller");
+
     @GetMapping("/checkNewMessage")
     public String checkNewDMessage(@RequestParam("dialogue_list") String dialogue_list,
                                    @RequestParam("user_id") int user_id) {
@@ -117,7 +123,7 @@ public class DialogueMessageController {
     }
 
     @PostMapping("/sendAudioMessage/{text}/{dialogue_id}/{date_time}/{sender_id}/{sender_name}/{sender_surname}")
-    public void senAudioMessage(@RequestParam("file") MultipartFile file,
+    public void sendAudioMessage(@RequestParam("file") MultipartFile file,
                                 HttpServletResponse response,
                                 @PathVariable int dialogue_id,
                                 @PathVariable long date_time,
@@ -153,6 +159,49 @@ public class DialogueMessageController {
                 inputStream.close();
             };
         } catch (FileNotFoundException ignored) {
+        }
+        return null;
+    }
+
+    @PostMapping("/sendFile/{text}/{dialogue_id}/{date_time}/{sender_id}/{sender_name}/{sender_surname}")
+    public void sendFile(@RequestParam("file") MultipartFile file,
+                         HttpServletResponse response,
+                         @PathVariable int dialogue_id,
+                         @PathVariable long date_time,
+                         @PathVariable int sender_id,
+                         @PathVariable String sender_name,
+                         @PathVariable String sender_surname,
+                         @PathVariable String text) throws IOException {
+        DialogueMessage dm = new DialogueMessage(text,
+                dialogue_id,
+                new SimpleDateFormat("yyyy-MM-dd").format(date_time) +
+                        "T" +
+                        new SimpleDateFormat("HH:mm:ss.SSS").format(date_time),
+                sender_id,
+                sender_name,
+                sender_surname);
+        int message_id = DMessageTable.addMessage(dm, 4);
+        response.addIntHeader("message_id", message_id);
+        new File("D:/dialogue_messages/" + message_id).mkdir();
+        Path path = Paths.get("D:/dialogue_messages/" + message_id + "/" + text);
+        file.transferTo(path);
+    }
+
+    @GetMapping("getFile")
+    public ResponseEntity<Resource> getFile(@RequestParam("id") String id,
+                                            HttpServletResponse response) {
+        try {
+            response.addIntHeader("dialogue_messages", Integer.parseInt(id));
+            File dir = new File("D:\\dialogue_messages\\" + id + "\\");
+            File[] arrFiles = dir.listFiles();
+            FileInputStream inputStream = new FileInputStream("D:\\dialogue_messages\\" + id + "\\" + arrFiles[0].getName());
+            InputStreamResource resource = new InputStreamResource(inputStream);
+
+            return ResponseEntity.ok()
+                    .contentLength(arrFiles[0].length())
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(resource);
+        } catch (FileNotFoundException | NullPointerException ignored) {
         }
         return null;
     }
