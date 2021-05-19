@@ -1,8 +1,8 @@
 package com.example.conference.db;
 
 import com.example.conference.ConferenceApplication;
-import com.example.conference.ResultCard;
-import com.example.conference.ResultCards;
+import com.example.conference.json.ResultCard;
+import com.example.conference.json.ResultCards;
 
 import java.sql.Connection;
 import java.sql.ResultSet;

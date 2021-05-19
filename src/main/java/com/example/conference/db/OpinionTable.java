@@ -1,9 +1,9 @@
 package com.example.conference.db;
 
 import com.example.conference.ConferenceApplication;
-import com.example.conference.Opinion;
-import com.example.conference.OpinionCard;
-import com.example.conference.OpinionCards;
+import com.example.conference.json.Opinion;
+import com.example.conference.json.OpinionCard;
+import com.example.conference.json.OpinionCards;
 
 import java.sql.Connection;
 import java.sql.ResultSet;

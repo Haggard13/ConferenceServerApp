@@ -1,88 +1,55 @@
 package com.example.conference.db;
 
 import com.example.conference.ConferenceApplication;
-import com.example.conference.JsonEntity.Input.Conference;
-import com.example.conference.JsonEntity.Input.ConferenceMember;
-import com.example.conference.JsonEntity.Output.*;
-import com.example.conference.sqlQuery.ConferenceQueries;
+import com.example.conference.json.ConferenceEntity;
+import com.example.conference.json.Input.ConferenceMember;
+import com.example.conference.json.Output.ContactEntityWithStatus;
+import com.example.conference.query.ConferenceQueries;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ConferenceTable {
-    public static ConferenceNotification checkNewConference(int user_id) {
+    private static Logger logger = LoggerFactory.getLogger(ConferenceTable.class);
+
+    public static int createNewConference(ConferenceEntity conference, List<ConferenceMember> members) {
         Connection con = ConferenceApplication.con;
-        ConferenceNotification cs = new ConferenceNotification();
-
-        try(Statement st = con.createStatement()) {
-            List<Integer> conferenceIDList = new ArrayList<>();
-
-            ResultSet rs = st.executeQuery(ConferenceQueries.notNotifiedConferenceQuery(user_id));
-            while (rs.next()) {
-                cs.conference_list.add(rs.getString(2));
-                conferenceIDList.add(rs.getInt(1));
-            }
-            for (Integer conference_id: conferenceIDList) {
-                st.execute(ConferenceQueries.updateNotificationQuery(conference_id, user_id));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return cs;
-    }
-
-    public static int createNewConference(Conference c) {
-        Connection con = ConferenceApplication.con;
-        int conference_id = -1;
 
         try (Statement st = con.createStatement()) {
 
-            ResultSet rs = st.executeQuery(ConferenceQueries.createConferenceQuery(c.name, c.count));
+            ResultSet rs = st.executeQuery(ConferenceQueries.createConferenceQuery(conference));
             rs.next();
-            conference_id = rs.getInt(1);
-            for (ConferenceMember conferenceMember: c.members) {
-                st.execute(ConferenceQueries.addMemberQuery(conferenceMember.id,  conference_id, conferenceMember.status));
+            int conferenceID = rs.getInt(1);
+            for (ConferenceMember member : members) {
+                st.execute(ConferenceQueries.addMemberQuery(member,  conferenceID));
             }
+            return conferenceID;
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage());
         }
 
-        return conference_id;
+        return -1;
     }
 
-    public static OutputConferenceList getNewConference(int user_id, int last_conference_id) {
+    public static boolean renameConference(int id, String name) {
         Connection con = ConferenceApplication.con;
-        OutputConferenceList conferences = new OutputConferenceList();
-
-        try (Statement st = con.createStatement()) {
-            ResultSet rs = st.executeQuery(ConferenceQueries.newConferenceQuery(user_id, last_conference_id));
-            conferences.list = new ArrayList<>();
-            while (rs.next()) {
-                OutputConference c = new OutputConference(rs.getInt(1), rs.getString(2), rs.getInt(3));
-                conferences.list.add(c);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return conferences;
-    }
-
-    public static int renameConference(int id, String name) {
-        Connection con = ConferenceApplication.con;
-        int code = -1;
 
         try(Statement st = con.createStatement()) {
             st.execute("USE conference;" +
-                    " UPDATE conferences SET name = '" + name + "' WHERE id = " + id);
-            code = 1;
+                    " UPDATE conferences SET name = N'" + name + "' WHERE id = " + id);
+            logger.info("conference rename");
+            return true;
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage());
         }
 
-        return code;
+        return false;
     }
 
     public static String getConferenceName(int id) {
@@ -101,9 +68,9 @@ public class ConferenceTable {
         return name;
     }
 
-    public static ConferenceMembersList getConferenceMembers(int id) {
+    public static List<ContactEntityWithStatus> getConferenceMembers(int id) {
         Connection con = ConferenceApplication.con;
-        ConferenceMembersList cml = new ConferenceMembersList();
+        List<ContactEntityWithStatus> members = new ArrayList<>();
         try (Statement st = con.createStatement()) {
             ResultSet rs = st.executeQuery(
                     "SELECT users.email, " +
@@ -113,41 +80,81 @@ public class ConferenceTable {
                             "FROM users INNER JOIN user_conferences ON users.id = user_conferences.id_user " +
                             "WHERE user_conferences.id_conference = " + id);
             while (rs.next()) {
-                cml.list.add(
+                members.add(
                         new ContactEntityWithStatus(rs.getString(1),
                                 rs.getString(2),
                                 rs.getString(3),
                                 rs.getInt(4)));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage());
         }
-        return cml;
+        return members;
     }
 
-    public static int deleteUser(int id, int user_id, int deleter_id) {
+    public static boolean deleteUser(int id, int user_id, int deleter_id) {
         Connection con = ConferenceApplication.con;
-        int result = 0;
         try (Statement st = con.createStatement()){
             st.execute("IF EXISTS (SELECT status FROM user_conferences WHERE (id_user = " + deleter_id + " AND id_conference = " + id +
                     " AND status = 1)) DELETE FROM user_conferences WHERE id_conference = " + id + " AND id_user = " + user_id);
-            result = 1;
+            logger.info("User deleted from conference");
+            return true;
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return result;
+        return false;
     }
 
-    public static int addUser(int id, int user_id, int adder_id) {
+    public static boolean addUser(int id, int user_id, int adder_id) {
         Connection con = ConferenceApplication.con;
-        int result = 0;
         try (Statement st = con.createStatement()){
             st.execute("IF EXISTS (SELECT status FROM user_conferences WHERE (id_user = " + adder_id + " AND id_conference = " + id +
                     " AND status = 1)) INSERT user_conferences VALUES (" + user_id + ", " + id + ", 0, 0, 0)");
-            result = 1;
+            logger.info("User added in conference");
+            return true;
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return result;
+        return false;
+    }
+
+    public static List<ConferenceEntity> getConferences(int userID) {
+        Connection con = ConferenceApplication.con;
+        try (Statement st = con.createStatement()) {
+            ResultSet r = st.executeQuery(
+                    "USE conference; SELECT * FROM dbo.conferences " +
+                    "WHERE (id in (" +
+                    "select id_conference from user_conferences " +
+                    "where id_user = " +
+                    userID + "))");
+            ArrayList<ConferenceEntity> conferences = new ArrayList<>();
+            while (r.next()) {
+                conferences.add(
+                        new ConferenceEntity(
+                                r.getInt(1),
+                                r.getString(2),
+                                r.getInt(3),
+                                r.getString(4),
+                                r.getTimestamp(5).getTime()
+                        )
+                );
+            }
+            return conferences;
+        } catch(SQLException e) {
+            logger.error(e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    public static void setLastMessageAndTime(int id, String text, String time) {
+        Connection con = ConferenceApplication.con;
+        try (Statement st = con.createStatement()) {
+            st.execute("USE conference; UPDATE dbo.conferences " +
+                    "SET last_message = N'" + text + "', " +
+                    "last_message_time = '" + time + "' " +
+                    "WHERE id = " + id);
+        } catch(SQLException e) {
+            logger.error(e.getMessage());
+        }
     }
 }
