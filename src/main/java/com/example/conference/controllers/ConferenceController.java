@@ -21,6 +21,11 @@ import java.util.List;
 public class ConferenceController {
     private static final Logger logger = LoggerFactory.getLogger(ConferenceController.class);
 
+    @GetMapping("/test")
+    public String test() {
+        return "good";
+    }
+
     @GetMapping("/conference/get_conference_members")
     public List<ContactEntityWithStatus> getConferenceMembers(@RequestParam("conference_id") int id) {
         return ConferenceTable.getConferenceMembers(id);
