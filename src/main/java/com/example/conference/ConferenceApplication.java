@@ -1,22 +1,17 @@
 package com.example.conference;
 
 import com.example.conference.db.DataBaseInfo;
-import com.example.conference.kurento.CallHandler;
-import com.example.conference.kurento.RoomManager;
-import com.example.conference.kurento.UserRegistry;
+import com.example.conference.signaling.CallHandler;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
-import org.kurento.client.KurentoClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
-import org.springframework.web.socket.server.standard.ServletServerContainerFactoryBean;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -55,35 +50,8 @@ public class ConferenceApplication implements WebSocketConfigurer {
         FirebaseApp.initializeApp(options);
     }
 
-    @Bean
-    public UserRegistry registry() {
-        return new UserRegistry();
-    }
-
-    @Bean
-    public RoomManager roomManager() {
-        return new RoomManager();
-    }
-
-    @Bean
-    public CallHandler groupCallHandler() {
-        return new CallHandler();
-    }
-
-    @Bean
-    public KurentoClient kurentoClient() {
-        return KurentoClient.create();
-    }
-
-    @Bean
-    public ServletServerContainerFactoryBean createServletServerContainerFactoryBean() {
-        ServletServerContainerFactoryBean container = new ServletServerContainerFactoryBean();
-        container.setMaxTextMessageBufferSize(32768);
-        return container;
-    }
-
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(groupCallHandler(), "/call");
+        registry.addHandler(new CallHandler(), "/groupcall").setAllowedOrigins("*");
     }
 }

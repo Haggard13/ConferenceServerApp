@@ -39,14 +39,12 @@ public class MeetChatController {
     public String getNewCMessage(@RequestParam("conference_id") int conference_id,
                                  @RequestParam("last_message_id") int l_m_id,
                                  @RequestParam("user_id") int user_id) {
-        log.info("Getting");
         return new Gson().toJson(MeetChatTable.getNewMessages(user_id, conference_id, l_m_id));
     }
 
     @GetMapping("/check_new_message")
     public boolean checkNewCMessage(@RequestParam("conference_id") int conferenceID,
                                     @RequestParam("last_message_id") int lastMessageID) {
-        log.info("Checking");
         return MeetChatTable.checkNewMessage(conferenceID, lastMessageID);
     }
 }

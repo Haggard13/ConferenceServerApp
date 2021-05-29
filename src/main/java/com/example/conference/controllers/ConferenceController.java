@@ -21,6 +21,12 @@ import java.util.List;
 public class ConferenceController {
     private static final Logger logger = LoggerFactory.getLogger(ConferenceController.class);
 
+    @PostMapping("/offer")
+    public boolean offer(@RequestBody String a) {
+        logger.info(a);
+        return true;
+    }
+
     @GetMapping("/test")
     public String test() {
         return "good";

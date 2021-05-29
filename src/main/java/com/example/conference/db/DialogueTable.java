@@ -1,6 +1,6 @@
 package com.example.conference.db;
 
-import com.example.conference.Account;
+import com.example.conference.json.Account;
 import com.example.conference.ConferenceApplication;
 import com.example.conference.json.DialogueEntity;
 import com.example.conference.json.Output.OutputDialogue;

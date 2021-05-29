@@ -1,7 +1,7 @@
 package com.example.conference.controllers;
 
 
-import com.example.conference.Account;
+import com.example.conference.json.Account;
 import com.example.conference.db.DMessageTable;
 import com.example.conference.db.DialogueTable;
 import com.example.conference.json.DMessageEntity;

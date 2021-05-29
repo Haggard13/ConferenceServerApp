@@ -1,0 +1,16 @@
+server:
+  port: 8082
+
+spring:
+  datasource:
+    driver-class-name: net.sourceforge.jtds.jdbc.Driver
+    username: sa
+    password: Elzahaggard13@
+    url: jdbc:jtds:sqlserver://localhost:1433
+
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 200MB
+      enabled: true
+      location: /home/eh13/server/tmp

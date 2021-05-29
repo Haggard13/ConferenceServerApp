@@ -1,6 +1,6 @@
 package com.example.conference.query;
 
-import com.example.conference.Account;
+import com.example.conference.json.Account;
 import com.example.conference.json.DialogueEntity;
 
 import java.text.SimpleDateFormat;

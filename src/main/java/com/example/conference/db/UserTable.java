@@ -1,7 +1,7 @@
 package com.example.conference.db;
 
 import com.example.conference.ConferenceApplication;
-import com.example.conference.ContactEntity;
+import com.example.conference.json.ContactEntity;
 import com.example.conference.json.Output.UserInfo;
 import com.example.conference.query.UserQueries;
 import org.slf4j.Logger;

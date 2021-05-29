@@ -1,6 +1,6 @@
 package com.example.conference.controllers;
 
-import com.example.conference.ContactEntity;
+import com.example.conference.json.ContactEntity;
 import com.example.conference.db.UserTable;
 import com.example.conference.json.Output.UserInfo;
 import com.google.gson.Gson;

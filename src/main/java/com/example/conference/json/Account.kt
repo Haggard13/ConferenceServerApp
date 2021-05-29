@@ -1,4 +1,4 @@
-package com.example.conference
+package com.example.conference.json
 
 data class Account(
     val id: Int,
