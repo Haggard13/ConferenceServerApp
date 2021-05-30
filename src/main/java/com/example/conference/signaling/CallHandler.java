@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 public class CallHandler extends TextWebSocketHandler {
     private static final Logger log = LoggerFactory.getLogger(CallHandler.class);
     private static final Gson gson = new Gson();
+    /*herooooku*/
 
     private final List<VideoConference> conferences = new ArrayList<>();
     private final List<VideoConferenceMember> members = new ArrayList<>();
