@@ -21,6 +21,7 @@ public class ConferenceAvatarController {
         return true;
     }
 
+    
     @GetMapping("/download")
     public StreamingResponseBody downloadAvatar(@RequestParam("id") String id,
                                                 HttpServletResponse response){
